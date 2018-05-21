@@ -1,8 +1,12 @@
+import 'babel-polyfill'
 import Vue from 'vue'
 import App from './App'
 // import router from './router'
+import fastclick from 'fastclick'
 
 import 'common/stylus/index.styl'
+
+fastclick.attach(document.body) // fastclick 推荐使用方式
 
 Vue.config.productionTip = false
 
