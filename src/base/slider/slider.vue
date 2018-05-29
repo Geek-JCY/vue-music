@@ -25,7 +25,7 @@ export default {
     },
     interval: {
       type: Number,
-      default: 4000
+      default: 2000
     },
     showDot: {
       type: Boolean,
@@ -51,14 +51,96 @@ export default {
     }
   },
   mounted() {
-    setTimeout(() => {
-      this._setSliderWidth()
-      this._initDots()
-      this._initSlider()
-    }, 20)
+    this.update()
+
+    window.addEventListener('resize', () => {
+      if (!this.slider || !this.slider.enabled) {
+        return false
+      }
+      clearTimeout(this.resizeTimer)
+      this.resizeTimer = setTimeout(() => {
+        if (this.slider.isInTransition) {
+          this._onScrollEnd()
+        } else {
+          if (this.autoPlay) {
+            this._play()
+          }
+        }
+        this.refresh()
+      }, 60)
+    })
+  },
+  /**
+   * keep-alive 组件激活时调用 此声明周期钩子
+   */
+  activated() {
+    if (!this.slider) {
+      return false
+    }
+    this.slider.enabled()
+    let pageIndex = this.slider.getCurrentPage().pageX
+    this.slider.goToPage(pageIndex, 0, 0)
+    this.currentPageIndex = pageIndex
+    if (this.autoPlay) {
+      this._play()
+    }
+  },
+  /**
+   * keep-alive 组件停用时调用 此声明周期钩子
+   */
+  deactivated() {
+    this.slider.disabled()
+    clearTimeout(this.timer)
+  },
+  /**
+   * 声明周期钩子 beforeDestory
+   */
+  beforeDestroy() {
+    this.slide.disable()
+    clearTimeout(this.timer)
   },
   methods: {
-    _setSliderWidth() {
+    /**
+     * 当 slider 方式修改，变化时
+     */
+    update() {
+      if (this.slider) {
+        this.slider.destroy()
+      }
+      this.$nextTick(() => {
+        this.init()
+      })
+    },
+    /**
+     * slider 初始化 方法
+     */
+    init() {
+      clearTimeout(this.timer)
+      this.currentPageIndex = 0
+      this._setSliderWidth()
+      if (this.showDot) {
+        this._initDots()
+      }
+      this._initSlider()
+
+      if (this.autoPlay) {
+        this._play()
+      }
+    },
+    refresh() {
+      this._setSliderWidth(true)
+      this.slider.refresh()
+    },
+    prev() {
+      this.slider.prev()
+    },
+    next() {
+      this.slider.next()
+    },
+    /**
+     * 设置 slider的 width, 和 sliderGroup的 width
+     */
+    _setSliderWidth(isResize) {
       this.children = this.$refs.sliderGroup.children
 
       let width = 0
@@ -71,14 +153,20 @@ export default {
         width += sliderWidth
       }
 
-      if (this.loop) {
+      if (this.loop && !isResize) {
         width += sliderWidth * 2
       }
       this.$refs.sliderGroup.style.width = width + 'px'
     },
+    /**
+     * 初始化 轮播图的 dots
+     */
     _initDots() {
       this.dots = new Array(this.children.length)
     },
+    /**
+     * 初始化 slider的 配置
+     */
     _initSlider() {
       this.slider = new BScroll(this.$refs.slider, {
         scrollX: true,
@@ -93,13 +181,55 @@ export default {
         stopPropagation: true,
         click: this.click
       })
+
+      this.slider.on('scrollEnd', this._onScrollEnd)
+
+      this.slider.on('touchEnd', () => (
+        this.autoPlay ? this._play() : ''
+      ))
+
+      this.slider.on('beforeScrollStart', () => (
+        this.autoPlay ? clearTimeout(this.timer) : ''
+      ))
     },
+    /**
+     * 播放功能
+     */
     _play() {
+      clearTimeout(this.timer)
       this.timer = setTimeout(() => {
         this.slider.next()
       }, this.interval)
+    },
+    /**
+     * 自定义事件 scrollEnd事件后，触发 _onScrollEnd事件
+     */
+    _onScrollEnd() {
+      let pageIndex = this.slider.getCurrentPage().pageX
+      this.currentPageIndex = pageIndex
+      if (this.autoPlay) {
+        this._play()
+      }
+    }
+  },
+  /**
+   * watch
+   */
+  watch: {
+    loop() {
+      this.update()
+    },
+    autoPlay() {
+      this.update()
+    },
+    speed() {
+      this.update()
+    },
+    threshold() {
+      this.update()
     }
   }
+
 }
 </script>
 

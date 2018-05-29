@@ -8,10 +8,10 @@ import originJSONP from 'jsonp'
  * @returns {promise obj} new Promise
  */
 export default function jsonp(url, data, option) {
-  url = (url.indexOf('?') < 0 ? '?' : '&') + param(data)
+  url += (url.indexOf('?') < 0 ? '?' : '&') + param(data)
   return new Promise((resolve, reject) => {
-    originJSONP(url, option, (err, data) => {
-      !err ? resolve(data) : reject(err)
+    originJSONP(url, option, (err, res) => {
+      !err ? resolve(res) : reject(err)
     })
   })
 }
