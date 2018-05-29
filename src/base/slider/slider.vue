@@ -25,7 +25,7 @@ export default {
     },
     interval: {
       type: Number,
-      default: 2000
+      default: 4000
     },
     showDot: {
       type: Boolean,
@@ -77,7 +77,7 @@ export default {
     if (!this.slider) {
       return false
     }
-    this.slider.enabled()
+    this.slider.enable()
     let pageIndex = this.slider.getCurrentPage().pageX
     this.slider.goToPage(pageIndex, 0, 0)
     this.currentPageIndex = pageIndex
@@ -89,14 +89,14 @@ export default {
    * keep-alive 组件停用时调用 此声明周期钩子
    */
   deactivated() {
-    this.slider.disabled()
+    this.slider.disable()
     clearTimeout(this.timer)
   },
   /**
    * 声明周期钩子 beforeDestory
    */
   beforeDestroy() {
-    this.slide.disable()
+    this.slider.disable()
     clearTimeout(this.timer)
   },
   methods: {
@@ -173,9 +173,9 @@ export default {
         scrollY: false,
         momentum: false,
         snap: {
-          loop: this.loop,
-          threshold: this.threshold,
-          speed: this.speed
+          loop: this.loop, // 是否可以无缝循环轮播
+          threshold: this.threshold, // 用手指滑动时页面可切换的阈值，大于这个阈值可以滑动的下一页
+          speed: this.speed // 轮播图切换的动画时间
         },
         bounce: false,
         stopPropagation: true,
