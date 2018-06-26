@@ -1,12 +1,12 @@
 <template>
   <div class="recommend">
-      <Scroll class="recommend-content" :data="discList">
+      <Scroll ref="scroll" class="recommend-content" :data="discList">
         <div>
           <div class="slider-wrapper" v-if="recommends.length">
             <Slider>
               <div v-for="item in recommends" :key="item.linkUrl">
                 <a :href="item.linkUrl">
-                  <img :src="item.picUrl">
+                  <img @load="loadImage" :src="item.picUrl">
                 </a>
               </div>
             </Slider>
@@ -48,11 +48,16 @@ export default {
     this._getDiscList()
   },
   methods: {
-    data() {
-      return {
-        recommends: []
+    // 当轮播图加载完毕，再刷新scroll 重新计算高度
+    loadImage() {
+      if (!this.checkloaded) {
+        this.checkloaded = true
+        setTimeout(() => {
+          this.$refs.scroll.refresh()
+        }, 20)
       }
     },
+    // 得到推荐歌单数据
     _getRecommend() {
       getRecommend().then((res) => {
         if (res.code === ERR_OK) {
@@ -60,6 +65,7 @@ export default {
         }
       })
     },
+    // 得到热门歌单数据
     _getDiscList() {
       getDiscList().then((res) => {
         if (res.code === ERR_OK) {
